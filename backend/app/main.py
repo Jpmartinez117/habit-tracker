@@ -1,13 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.database import engine
+from .routes.user_routes import router as user_router
+from .routes.auth_routes import router as auth_router
+from .routes.protected_routes import router as protected_router
 
 app = FastAPI(
-    title = "Habit Tracker API",
-    description = "API for managing habits and tracking progress",
-    version = "1.0.0",
-    docs_url = "/docs",
-    redoc_url = "/redoc",
+    title="Habit Tracker API",
+    description="API for managing habits and tracking progress",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 origins = [
@@ -21,6 +24,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(user_router)
+app.include_router(auth_router)
+app.include_router(protected_router)
 
 @app.get("/")
 def root():
