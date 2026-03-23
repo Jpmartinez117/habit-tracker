@@ -3,6 +3,11 @@ from typing import Optional
 from datetime import datetime
 from enum import Enum
 
+class frequencyEnum(str, Enum):
+    daily = "daily"
+    weekly = "weekly"
+    monthly = "monthly"
+
 class HabitCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = Field(None, max_length=255)
@@ -21,8 +26,3 @@ class HabitResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
-
-class frequencyEnum(str, Enum):
-    daily = "daily"
-    weekly = "weekly"
-    monthly = "monthly"
