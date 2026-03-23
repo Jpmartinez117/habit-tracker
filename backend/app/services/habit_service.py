@@ -4,6 +4,14 @@ from app.models.habit_model import Habit
 from app.schemas.habit import HabitCreate, HabitUpdate
 
 def create_habit(db: Session, habit_data: HabitCreate, user_id: int) -> Habit:
+    existing = (
+        db.query(Habit)
+        .filter(Habit.user_id == user_id, Habit.name == habit_data.name.strip(), Habit.is_archived == False)
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="An active habit with this name already exists")
+
     new_habit = Habit(
         user_id=user_id,
         name=habit_data.name.strip(),
