@@ -4,6 +4,7 @@ from .core.database import engine
 from .routes.user_routes import router as user_router
 from .routes.auth_routes import router as auth_router
 from .routes.protected_routes import router as protected_router
+from app.routes import habit_routes
 
 app = FastAPI(
     title="Habit Tracker API",
@@ -28,6 +29,7 @@ app.add_middleware(
 app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(protected_router)
+app.include_router(habit_routes.router)
 
 @app.get("/")
 def root():

@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from pwdlib import PasswordHash
 
+
 # Change this in production and store in .env later
 SECRET_KEY = "change-this-to-a-long-random-secret"
 ALGORITHM = "HS256"
