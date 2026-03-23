@@ -4,8 +4,8 @@ from typing import List
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.users import User
-from app.schemas.habit import HabitCreate, HabitResponse
-from app.services.habit_service import create_habit, get_user_habits, archive_habit
+from app.schemas.habit import HabitCreate, HabitUpdate, HabitResponse
+from app.services.habit_service import create_habit, get_user_habits, update_habit, archive_habit
 
 router = APIRouter(prefix="/habits", tags=["Habits"])
 
@@ -23,6 +23,15 @@ def get_habits(
     current_user: User = Depends(get_current_user),
 ):
     return get_user_habits(db=db, user_id=current_user.id)
+
+@router.patch("/{habit_id}", response_model=HabitResponse)
+def update_habit_route(
+    habit_id: int,
+    habit_data: HabitUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return update_habit(db=db, habit_id=habit_id, user_id=current_user.id, habit_data=habit_data)
 
 @router.patch("/{habit_id}/archive", response_model=HabitResponse)
 def archive_habit_route(

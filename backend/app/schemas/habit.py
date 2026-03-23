@@ -8,6 +8,12 @@ class frequencyEnum(str, Enum):
     weekly = "weekly"
     monthly = "monthly"
 
+class HabitUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=255)
+    frequency: Optional[frequencyEnum] = None
+    target_count: Optional[int] = None
+
 class HabitCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = Field(None, max_length=255)

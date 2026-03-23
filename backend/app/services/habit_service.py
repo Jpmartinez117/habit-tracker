@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.models.habit_model import Habit
-from app.schemas.habit import HabitCreate
+from app.schemas.habit import HabitCreate, HabitUpdate
 
 def create_habit(db: Session, habit_data: HabitCreate, user_id: int) -> Habit:
     new_habit = Habit(
@@ -23,6 +23,24 @@ def get_user_habits(db: Session, user_id: int):
         .filter(Habit.user_id == user_id, Habit.is_archived == False)
         .all()
         )
+
+def update_habit(db: Session, habit_id: int, user_id: int, habit_data: HabitUpdate) -> Habit:
+    habit = (
+        db.query(Habit)
+        .filter(Habit.id == habit_id, Habit.user_id == user_id)
+        .first()
+    )
+
+    if not habit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Habit not found")
+
+    updates = habit_data.model_dump(exclude_unset=True)
+    for field, value in updates.items():
+        setattr(habit, field, value)
+
+    db.commit()
+    db.refresh(habit)
+    return habit
 
 def archive_habit(db: Session, habit_id: int, user_id: int) -> Habit:
     habit = (
