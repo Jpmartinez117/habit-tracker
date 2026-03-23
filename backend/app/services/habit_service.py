@@ -27,7 +27,7 @@ def get_user_habits(db: Session, user_id: int):
 def update_habit(db: Session, habit_id: int, user_id: int, habit_data: HabitUpdate) -> Habit:
     habit = (
         db.query(Habit)
-        .filter(Habit.id == habit_id, Habit.user_id == user_id)
+        .filter(Habit.id == habit_id, Habit.user_id == user_id, Habit.is_archived == False)
         .first()
     )
 
