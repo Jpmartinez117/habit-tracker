@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.users import User
 from app.schemas.habit import HabitCreate, HabitUpdate, HabitResponse
-from app.services.habit_service import create_habit, get_user_habits, update_habit, archive_habit
+from app.services.habit_service import create_habit, get_user_habits, get_archived_habits, update_habit, archive_habit, restore_habit
 
 router = APIRouter(prefix="/habits", tags=["Habits"])
 
@@ -24,6 +24,13 @@ def get_habits(
 ):
     return get_user_habits(db=db, user_id=current_user.id)
 
+@router.get("/archived", response_model=List[HabitResponse])
+def get_archived_habits_route(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return get_archived_habits(db=db, user_id=current_user.id)
+
 @router.patch("/{habit_id}", response_model=HabitResponse)
 def update_habit_route(
     habit_id: int,
@@ -40,3 +47,11 @@ def archive_habit_route(
     current_user: User = Depends(get_current_user),
 ):
     return archive_habit(db=db, habit_id=habit_id, user_id=current_user.id)
+
+@router.patch("/{habit_id}/restore", response_model=HabitResponse)
+def restore_habit_route(
+    habit_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return restore_habit(db=db, habit_id=habit_id, user_id=current_user.id)

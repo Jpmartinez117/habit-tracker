@@ -32,6 +32,13 @@ def get_user_habits(db: Session, user_id: int):
         .all()
         )
 
+def get_archived_habits(db: Session, user_id: int):
+    return (
+        db.query(Habit)
+        .filter(Habit.user_id == user_id, Habit.is_archived == True)
+        .all()
+        )
+
 def update_habit(db: Session, habit_id: int, user_id: int, habit_data: HabitUpdate) -> Habit:
     habit = (
         db.query(Habit)
@@ -61,6 +68,21 @@ def archive_habit(db: Session, habit_id: int, user_id: int) -> Habit:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Habit not found")
 
     habit.is_archived = True
+    db.commit()
+    db.refresh(habit)
+    return habit
+
+def restore_habit(db: Session, habit_id: int, user_id: int) -> Habit:
+    habit = (
+        db.query(Habit)
+        .filter(Habit.id == habit_id, Habit.user_id == user_id, Habit.is_archived == True)
+        .first()
+    )
+
+    if not habit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Habit not found")
+
+    habit.is_archived = False
     db.commit()
     db.refresh(habit)
     return habit

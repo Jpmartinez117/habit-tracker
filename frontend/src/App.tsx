@@ -1,25 +1,29 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import DashboardPage from './pages/DashboardPage'
+import ManageHabitsPage from './pages/ManageHabitsPage'
+import LoggingPage from './pages/LoggingPage'
 
-function App() {
-  return (
-    <div className="container py-5">
-      <h1 className="mb-3">Habit Tracker</h1>
-      <p className="lead mb-4">
-        Frontend setup is working.
-      </p>
+export type Page = 'login' | 'register' | 'dashboard' | 'manage' | 'logging'
 
-      <div className="card shadow-sm">
-        <div className="card-body">
-          <h2 className="h5">Project Status</h2>
-          <p className="mb-0">
-            React + TypeScript + Vite + Bootstrap are connected successfully.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
+export default function App() {
+  const [page, setPage] = useState<Page>('login')
+
+  function navigate(next: Page) {
+    setPage(next)
+  }
+
+  switch (page) {
+    case 'login':
+      return <LoginPage navigate={navigate} />
+    case 'register':
+      return <RegisterPage navigate={navigate} />
+    case 'dashboard':
+      return <DashboardPage navigate={navigate} />
+    case 'manage':
+      return <ManageHabitsPage navigate={navigate} />
+    case 'logging':
+      return <LoggingPage navigate={navigate} />
+  }
 }
-
-export default App
