@@ -17,7 +17,12 @@ const MOOD_OPTIONS: { score: number; emoji: string }[] = [
 ]
 
 function getTodayISO(): string {
-  return new Date().toISOString().split('T')[0]
+  const d = new Date()
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
+  ].join('-')
 }
 
 function getTodayDisplay(): string {
@@ -117,7 +122,7 @@ export default function LoggingPage({ navigate }: Props) {
         </h6>
 
         {habits.length === 0 ? (
-          <p className="text-muted small mb-4">No active goals. Add some in Manage.</p>
+          <p className="text-muted small mb-4">No active habits. Add some in Manage.</p>
         ) : (
           <div className="mb-4">
             {habits.map(habit => (
