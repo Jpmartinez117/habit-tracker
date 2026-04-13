@@ -14,7 +14,7 @@ def get_today_habit_logs(db: Session, user_id: int) -> List[HabitLog]:
     return (
         db.query(HabitLog)
         .join(Habit, HabitLog.habit_id == Habit.id)
-        .filter(Habit.user_id == user_id, HabitLog.log_date == today)
+        .filter(Habit.user_id == user_id, HabitLog.log_date == today, Habit.is_archived == False)
         .all()
     )
 
@@ -29,6 +29,8 @@ def log_habit(db: Session, log_data: HabitLogCreate, user_id: int) -> HabitLog:
     if not habit:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Habit not found")
 
+    # Upsert: if a log already exists for this habit + date, update it in place.
+    # This lets users re-open the logging page and re-submit without creating duplicate entries.
     existing = (
         db.query(HabitLog)
         .filter(HabitLog.habit_id == log_data.habit_id, HabitLog.log_date == log_data.log_date)

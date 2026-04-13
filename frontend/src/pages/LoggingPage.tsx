@@ -8,14 +8,16 @@ interface Props {
   navigate: (page: Page) => void
 }
 
-const MOOD_OPTIONS: { score: number; emoji: string }[] = [
-  { score: 1, emoji: '😞' },
-  { score: 2, emoji: '😕' },
-  { score: 3, emoji: '😐' },
-  { score: 4, emoji: '🙂' },
-  { score: 5, emoji: '😄' },
+const MOOD_OPTIONS: { score: number; emoji: string; label: string }[] = [
+  { score: 1, emoji: '😞', label: 'Terrible' },
+  { score: 2, emoji: '😕', label: 'Bad' },
+  { score: 3, emoji: '😐', label: 'Okay' },
+  { score: 4, emoji: '🙂', label: 'Good' },
+  { score: 5, emoji: '😄', label: 'Excellent' },
 ]
 
+// Uses the local date (not UTC) to match the backend's date.today() which is also local.
+// If we used new Date().toISOString(), users in UTC- timezones would log to the wrong date after midnight UTC.
 function getTodayISO(): string {
   const d = new Date()
   return [
@@ -51,6 +53,8 @@ export default function LoggingPage({ navigate }: Props) {
       .then(([fetched, todayLogs, todayMood]) => {
         setHabits(fetched)
 
+        // Pre-populate toggles from today's existing logs so re-opening the page
+        // shows the user's previous selections rather than resetting everything to off (missed).
         const initial: Record<number, boolean> = {}
         fetched.forEach(h => {
           const existing = todayLogs.find(l => l.habit_id === h.id)
@@ -150,13 +154,13 @@ export default function LoggingPage({ navigate }: Props) {
         </h6>
 
         <div className="d-flex gap-2 mb-3">
-          {MOOD_OPTIONS.map(({ score, emoji }) => (
+          {MOOD_OPTIONS.map(({ score, emoji, label }) => (
             <button
               key={score}
               className={`btn btn-sm flex-fill ${moodScore === score ? 'btn-primary' : 'btn-outline-secondary'}`}
               onClick={() => setMoodScore(score)}
             >
-              {emoji} {score}
+              {score}. {label} {emoji}
             </button>
           ))}
         </div>

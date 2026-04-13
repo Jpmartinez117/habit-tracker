@@ -4,6 +4,8 @@ from app.models.habit_model import Habit
 from app.schemas.habit import HabitCreate, HabitUpdate
 
 def create_habit(db: Session, habit_data: HabitCreate, user_id: int) -> Habit:
+    # Only check for name conflicts among active (non-archived) habits.
+    # A user can re-create a habit with the same name after archiving the original.
     existing = (
         db.query(Habit)
         .filter(Habit.user_id == user_id, Habit.name == habit_data.name.strip(), Habit.is_archived == False)

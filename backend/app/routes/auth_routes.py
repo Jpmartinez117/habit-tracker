@@ -14,6 +14,10 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post("/login")
 def login(
     response: Response,
+    # OAuth2PasswordRequestForm is a FastAPI built-in that expects an
+    # application/x-www-form-urlencoded body with fields "username" and "password".
+    # We use the "username" field to carry the user's email address — the field
+    # name is a framework requirement, not a design choice.
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
@@ -22,21 +26,11 @@ def login(
         email=form_data.username,
         password=form_data.password
     )
-
-    response.set_cookie(
-        key="token",
-        value=access_token,
-        httponly=True,
-        samesite="lax",
-        secure=False,
-    )
-
-    return {"message": "Login successful"}
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/logout")
-def logout(response: Response):
-    response.delete_cookie("token")
+def logout():
     return {"message": "Logged out"}
 
 

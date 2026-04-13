@@ -16,6 +16,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: EmailStr
+    login_streak: int
 
     model_config = ConfigDict(from_attributes=True)
 

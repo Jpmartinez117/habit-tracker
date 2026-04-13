@@ -5,6 +5,8 @@ import DashboardPage from './pages/DashboardPage'
 import ManageHabitsPage from './pages/ManageHabitsPage'
 import LoggingPage from './pages/LoggingPage'
 
+// Simple state-based routing — no router library.
+// Navigating to a new page unmounts the current component and loses its local state.
 export type Page = 'login' | 'register' | 'dashboard' | 'manage' | 'logging'
 
 export default function App() {

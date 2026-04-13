@@ -3,8 +3,10 @@ from jose import jwt, JWTError
 from pwdlib import PasswordHash
 
 
-# Change this in production and store in .env later
+# WARNING: Move SECRET_KEY to an environment variable before deploying to production.
+# Anyone with this key can forge valid JWT tokens for any user.
 SECRET_KEY = "change-this-to-a-long-random-secret"
+# HS256 = HMAC with SHA-256, a symmetric signing algorithm (same key signs and verifies)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 

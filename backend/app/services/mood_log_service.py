@@ -7,11 +7,11 @@ from app.models.mood_log_model import MoodLog
 from app.schemas.mood_log import MoodLogCreate
 
 MOOD_LABELS = {
-    1: "Very Bad",
+    1: "Terrible",
     2: "Bad",
-    3: "Neutral",
+    3: "Okay",
     4: "Good",
-    5: "Very Good",
+    5: "Excellent",
 }
 
 

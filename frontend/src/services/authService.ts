@@ -3,6 +3,8 @@ import type { LoginRequest, RegisterRequest, UserResponse } from '../types/auth'
 const BASE_URL = 'http://localhost:8000'
 
 export async function login(data: LoginRequest): Promise<void> {
+  // The backend uses OAuth2PasswordRequestForm which requires application/x-www-form-urlencoded,
+  // not JSON. The "username" field carries the email address — this is a FastAPI convention.
   const body = new URLSearchParams()
   body.append('username', data.email)
   body.append('password', data.password)

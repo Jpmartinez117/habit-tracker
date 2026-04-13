@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import type { Habit } from '../types/habit'
 import { getHabits } from '../services/habitService'
 import { getMe, logout } from '../services/authService'
-import { getTodayHabitLogs } from '../services/logService'
+import { getTodayHabitLogs , getTodayMoodLog} from '../services/logService'
 import HabitListItem from '../components/HabitListItem'
 import type { Page } from '../App'
+// Havebt finished mapping mood lables to dashboard
 
 interface Props {
   navigate: (page: Page) => void
@@ -29,17 +30,25 @@ export default function DashboardPage({ navigate }: Props) {
   const [error, setError] = useState('')
   const [now, setNow] = useState(new Date())
   const [lastUpdated] = useState(new Date())
+  const [loginStreak, setLoginStreak] = useState(0)
+  const [moodLabel, setMoodlabel] = useState<string | null>(null)
 
+
+  // Add getMe() for authorization on refresh
   useEffect(() => {
-    Promise.all([getHabits(), getMe(), getTodayHabitLogs()])
-      .then(([fetchedHabits, user, todayLogs]) => {
+    Promise.all([getHabits(), getMe(), getTodayHabitLogs(), getTodayMoodLog()])
+      .then(([fetchedHabits, user, todayLogs, todayMood]) => {
         setHabits(fetchedHabits)
         setUsername(user.username)
         setCompletedCount(todayLogs.filter(l => l.status === 'completed').length)
+        setLoginStreak(user.login_streak)
+        setMoodlabel(todayMood?.mood_label ?? null)
       })
       .catch(() => setError('Failed to load dashboard'))
   }, [])
 
+  // Update the displayed clock every second. The cleanup function clears the interval
+  // on unmount to prevent state updates on an unmounted component (memory leak).
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(timer)
@@ -61,7 +70,7 @@ export default function DashboardPage({ navigate }: Props) {
       <div className="d-flex align-items-center px-4 py-3 border-bottom bg-white">
         <div className="flex-fill">
           <span className="fw-semibold">Welcome, {username}</span>
-        </div>
+          </div>
         <div className="flex-fill text-center">
           <span className="text-muted small">{formatDateTime(now)}</span>
         </div>
@@ -124,9 +133,12 @@ export default function DashboardPage({ navigate }: Props) {
                 <span className="fw-semibold">{total}</span>
               </div>
 
+              {/* TODO: fetch today's mood from the API instead of hardcoding "Not logged" */}
               <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
                 <span className="text-muted small">Mood</span>
-                <span className="text-muted small fst-italic">Not logged</span>
+                <span className={moodLabel ? 'fw-medium' : 'text-muted small fst-italic'}>
+                  {moodLabel ?? 'Not logged'}
+                </span>
               </div>
 
               <div className="d-flex flex-column gap-2">
@@ -148,9 +160,10 @@ export default function DashboardPage({ navigate }: Props) {
                 </span>
               </div>
 
+              {/* TODO: calculate streak from habit log history instead of hardcoding 0 */}
               <div className="d-flex justify-content-between align-items-center">
                 <span className="text-muted small">Consecutive days</span>
-                <span className="fw-semibold">0</span>
+                <span className="fw-semibold">{loginStreak}</span>
               </div>
 
             </div>
