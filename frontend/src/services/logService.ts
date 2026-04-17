@@ -1,19 +1,22 @@
-import type { HabitLogRequest, HabitLogResponse, MoodLogRequest, MoodLogResponse } from '../types/log'
+import type { HabitLogRequest, HabitLogResponse, HabitSummaryResponse, MoodLogRequest, MoodLogResponse, OverallSummaryResponse } from '../types/log'
+import { authHeaders, handleUnauthorized } from './authService'
 
 const BASE_URL = 'http://localhost:8000'
 
 export async function getTodayHabitLogs(): Promise<HabitLogResponse[]> {
   const res = await fetch(`${BASE_URL}/habit-logs/today`, {
-    credentials: 'include',
+    headers: authHeaders(),
   })
+  if (res.status === 401) handleUnauthorized()
   if (!res.ok) throw new Error('Failed to fetch today\'s habit logs')
   return res.json()
 }
 
 export async function getTodayMoodLog(): Promise<MoodLogResponse | null> {
   const res = await fetch(`${BASE_URL}/mood-logs/today`, {
-    credentials: 'include',
+    headers: authHeaders(),
   })
+  if (res.status === 401) handleUnauthorized()
   if (!res.ok) throw new Error('Failed to fetch today\'s mood log')
   return res.json()
 }
@@ -21,10 +24,10 @@ export async function getTodayMoodLog(): Promise<MoodLogResponse | null> {
 export async function logHabit(data: HabitLogRequest): Promise<HabitLogResponse> {
   const res = await fetch(`${BASE_URL}/habit-logs`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(data),
   })
+  if (res.status === 401) handleUnauthorized()
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail ?? 'Failed to log habit')
@@ -32,13 +35,33 @@ export async function logHabit(data: HabitLogRequest): Promise<HabitLogResponse>
   return res.json()
 }
 
+export async function getHabitSummary(habitId: number, month?: string): Promise<HabitSummaryResponse> {
+  const url = month
+    ? `${BASE_URL}/habit-logs/${habitId}/summary?month=${month}`
+    : `${BASE_URL}/habit-logs/${habitId}/summary`
+  const res = await fetch(url, { headers: authHeaders() })
+  if (res.status === 401) handleUnauthorized()
+  if (!res.ok) throw new Error('Failed to fetch habit summary')
+  return res.json()
+}
+
+export async function getOverallSummary(month?: string): Promise<OverallSummaryResponse> {
+  const url = month
+    ? `${BASE_URL}/habit-logs/overall/summary?month=${month}`
+    : `${BASE_URL}/habit-logs/overall/summary`
+  const res = await fetch(url, { headers: authHeaders() })
+  if (res.status === 401) handleUnauthorized()
+  if (!res.ok) throw new Error('Failed to fetch overall summary')
+  return res.json()
+}
+
 export async function logMood(data: MoodLogRequest): Promise<MoodLogResponse> {
   const res = await fetch(`${BASE_URL}/mood-logs`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(data),
   })
+  if (res.status === 401) handleUnauthorized()
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail ?? 'Failed to log mood')

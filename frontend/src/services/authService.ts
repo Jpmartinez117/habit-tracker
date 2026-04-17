@@ -1,6 +1,22 @@
 import type { LoginRequest, RegisterRequest, UserResponse } from '../types/auth'
 
 const BASE_URL = 'http://localhost:8000'
+const TOKEN_KEY = 'access_token'
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+export function handleUnauthorized(): never {
+  localStorage.removeItem(TOKEN_KEY)
+  window.dispatchEvent(new Event('auth:logout'))
+  throw new Error('Unauthorized')
+}
+
+export function authHeaders(): Record<string, string> {
+  const token = getToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
 
 export async function login(data: LoginRequest): Promise<void> {
   // The backend uses OAuth2PasswordRequestForm which requires application/x-www-form-urlencoded,
@@ -12,7 +28,6 @@ export async function login(data: LoginRequest): Promise<void> {
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    credentials: 'include',
     body: body.toString(),
   })
 
@@ -20,19 +35,21 @@ export async function login(data: LoginRequest): Promise<void> {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail ?? 'Login failed')
   }
+
+  const json = await res.json()
+  localStorage.setItem(TOKEN_KEY, json.access_token)
 }
 
 export async function logout(): Promise<void> {
-  await fetch(`${BASE_URL}/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
-  })
+  localStorage.removeItem(TOKEN_KEY)
+  await fetch(`${BASE_URL}/auth/logout`, { method: 'POST' })
 }
 
 export async function getMe(): Promise<UserResponse> {
   const res = await fetch(`${BASE_URL}/auth/me`, {
-    credentials: 'include',
+    headers: authHeaders(),
   })
+  if (res.status === 401) handleUnauthorized()
   if (!res.ok) throw new Error('Failed to fetch user')
   return res.json()
 }

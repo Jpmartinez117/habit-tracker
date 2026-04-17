@@ -1,19 +1,22 @@
 import type { Habit, CreateHabitRequest, UpdateHabitRequest } from '../types/habit'
+import { authHeaders, handleUnauthorized } from './authService'
 
 const BASE_URL = 'http://localhost:8000'
 
 export async function getHabits(): Promise<Habit[]> {
   const res = await fetch(`${BASE_URL}/habits`, {
-    credentials: 'include',
+    headers: authHeaders(),
   })
+  if (res.status === 401) handleUnauthorized()
   if (!res.ok) throw new Error('Failed to fetch habits')
   return res.json()
 }
 
 export async function getArchivedHabits(): Promise<Habit[]> {
   const res = await fetch(`${BASE_URL}/habits/archived`, {
-    credentials: 'include',
+    headers: authHeaders(),
   })
+  if (res.status === 401) handleUnauthorized()
   if (!res.ok) throw new Error('Failed to fetch archived habits')
   return res.json()
 }
@@ -21,10 +24,10 @@ export async function getArchivedHabits(): Promise<Habit[]> {
 export async function createHabit(data: CreateHabitRequest): Promise<Habit> {
   const res = await fetch(`${BASE_URL}/habits`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(data),
   })
+  if (res.status === 401) handleUnauthorized()
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail ?? 'Failed to create habit')
@@ -35,10 +38,10 @@ export async function createHabit(data: CreateHabitRequest): Promise<Habit> {
 export async function updateHabit(id: number, data: UpdateHabitRequest): Promise<Habit> {
   const res = await fetch(`${BASE_URL}/habits/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(data),
   })
+  if (res.status === 401) handleUnauthorized()
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail ?? 'Failed to update habit')
@@ -49,8 +52,9 @@ export async function updateHabit(id: number, data: UpdateHabitRequest): Promise
 export async function archiveHabit(id: number): Promise<Habit> {
   const res = await fetch(`${BASE_URL}/habits/${id}/archive`, {
     method: 'PATCH',
-    credentials: 'include',
+    headers: authHeaders(),
   })
+  if (res.status === 401) handleUnauthorized()
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail ?? 'Failed to archive habit')
@@ -61,8 +65,9 @@ export async function archiveHabit(id: number): Promise<Habit> {
 export async function restoreHabit(id: number): Promise<Habit> {
   const res = await fetch(`${BASE_URL}/habits/${id}/restore`, {
     method: 'PATCH',
-    credentials: 'include',
+    headers: authHeaders(),
   })
+  if (res.status === 401) handleUnauthorized()
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail ?? 'Failed to restore habit')

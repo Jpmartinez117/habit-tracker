@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import date, datetime
 from enum import Enum
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 
 class LogStatusEnum(str, Enum):
@@ -28,8 +28,27 @@ class HabitLogResponse(BaseModel):
 
 class DailyHabitBreakdown(BaseModel):
     date: date
-    logged: bool
-    status: Optional[str]
+    status: Literal["completed", "missed", "not_logged"]
+
+
+class DailyOverallBreakdown(BaseModel):
+    date: date
+    completed: int
+    total_daily_habits: int
+    percentage: float
+
+
+class OverallSummaryResponse(BaseModel):
+    month: str
+    daily_habit_count: int
+    total_completed: int
+    total_missed: int
+    completion_percentage: float
+    this_week_percentage: Optional[float]
+    last_week_percentage: Optional[float]
+    week_change: Optional[float]
+    average_mood: Optional[float]
+    daily_breakdown: List[DailyOverallBreakdown]
 
 
 class HabitSummaryResponse(BaseModel):
@@ -37,8 +56,8 @@ class HabitSummaryResponse(BaseModel):
     habit_name: str
     frequency: str
     is_archived: bool
-    days: int
-    total_logged: int
+    month: str
+    days_since_created: int
     total_completed: int
     total_missed: int
     completion_percentage: float

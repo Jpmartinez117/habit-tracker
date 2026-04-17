@@ -29,3 +29,45 @@ export interface MoodLogResponse {
   notes: string | null
   created_at: string
 }
+
+export interface DailyOverallBreakdown {
+  date: string
+  completed: number
+  total_daily_habits: number
+  percentage: number
+}
+
+export interface OverallSummaryResponse {
+  month: string
+  daily_habit_count: number
+  total_completed: number
+  total_missed: number
+  completion_percentage: number
+  this_week_percentage: number | null
+  last_week_percentage: number | null
+  week_change: number | null
+  average_mood: number | null
+  daily_breakdown: DailyOverallBreakdown[]
+}
+
+export interface DailyHabitBreakdown {
+  date: string
+  status: 'completed' | 'missed' | 'not_logged'
+}
+
+export interface HabitSummaryResponse {
+  habit_id: number
+  habit_name: string
+  frequency: string
+  is_archived: boolean
+  month: string
+  days_since_created: number
+  total_completed: number
+  total_missed: number
+  completion_percentage: number
+  this_week_percentage: number
+  last_week_percentage: number
+  week_change: number
+  current_streak: number
+  daily_breakdown: DailyHabitBreakdown[]
+}

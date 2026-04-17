@@ -145,7 +145,7 @@ export default function DashboardPage({ navigate }: Props) {
                 <button className="btn btn-primary btn-sm w-100" onClick={() => navigate('logging')}>
                   Log +
                 </button>
-                <button className="btn btn-outline-secondary btn-sm w-100" disabled>
+                <button className="btn btn-outline-secondary btn-sm w-100" onClick={() => navigate('data')}>
                   Data
                 </button>
                 <button className="btn btn-outline-secondary btn-sm w-100" onClick={() => navigate('manage')}>
