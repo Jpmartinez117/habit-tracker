@@ -124,7 +124,7 @@ export default function HabitMetricsPanel(props: Props) {
       return (
         <div>
           <h6 className="fw-semibold mb-3">That Month</h6>
-          <MetricRow label="Active Daily Habits" value={s.daily_habit_count} />
+          <MetricRow label="Active Daily Goals" value={s.daily_habit_count} />
           <MetricRow label="Completed" value={s.total_completed} />
           <MetricRow label="Missed" value={s.total_missed} />
           <MetricRow label="Completion %" value={`${s.completion_percentage}%`} />
@@ -148,7 +148,7 @@ export default function HabitMetricsPanel(props: Props) {
     return (
       <div>
         <h6 className="fw-semibold mb-3">This Month</h6>
-        <MetricRow label="Active Daily Habits" value={s.daily_habit_count} />
+        <MetricRow label="Active Daily Goals" value={s.daily_habit_count} />
         <MetricRow label="Completed this month" value={s.total_completed} />
         <MetricRow label="Missed this month" value={s.total_missed} />
         <MetricRow label="Completion %" value={`${s.completion_percentage}%`} />

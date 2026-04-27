@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
 from app.models.users import User
@@ -32,6 +33,12 @@ def register_user(db: Session, user_data: UserRegister) -> User:
         db.commit()
         db.refresh(new_user)
         return new_user
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this email or username already exists"
+        )
     except Exception:
         db.rollback()
         raise HTTPException(

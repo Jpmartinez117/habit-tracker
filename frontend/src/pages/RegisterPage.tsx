@@ -10,12 +10,27 @@ export default function RegisterPage({ navigate }: Props) {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const usernameTooShort = username.length > 0 && username.length < 3
+  const passwordMismatch = confirmPassword.length > 0 && password !== confirmPassword
+
+  function handleChange<T>(setter: (v: T) => void) {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      setter(e.target.value as T)
+      setError('')
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
     setLoading(true)
     try {
       await register({ username, email, password })
@@ -45,12 +60,16 @@ export default function RegisterPage({ navigate }: Props) {
               <input
                 id="username"
                 type="text"
-                className="form-control"
+                className={`form-control ${usernameTooShort ? 'is-invalid' : ''}`}
                 value={username}
-                onChange={e => setUsername(e.target.value)}
+                onChange={handleChange(setUsername)}
                 required
+                minLength={3}
                 autoFocus
               />
+              {usernameTooShort && (
+                <div className="invalid-feedback">Username must be at least 3 characters</div>
+              )}
             </div>
 
             <div className="mb-3">
@@ -60,7 +79,7 @@ export default function RegisterPage({ navigate }: Props) {
                 type="email"
                 className="form-control"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={handleChange(setEmail)}
                 required
               />
             </div>
@@ -72,9 +91,25 @@ export default function RegisterPage({ navigate }: Props) {
                 type="password"
                 className="form-control"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={handleChange(setPassword)}
+                required
+                minLength={8}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+              <input
+                id="confirmPassword"
+                type="password"
+                className={`form-control ${passwordMismatch ? 'is-invalid' : ''}`}
+                value={confirmPassword}
+                onChange={handleChange(setConfirmPassword)}
                 required
               />
+              {passwordMismatch && (
+                <div className="invalid-feedback">Passwords do not match</div>
+              )}
             </div>
 
             <button

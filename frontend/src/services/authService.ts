@@ -2,6 +2,7 @@ import type { LoginRequest, RegisterRequest, UserResponse } from '../types/auth'
 
 const BASE_URL = 'http://localhost:8000'
 const TOKEN_KEY = 'access_token'
+const FETCH_TIMEOUT_MS = 10000
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
@@ -15,7 +16,27 @@ export function handleUnauthorized(): never {
 
 export function authHeaders(): Record<string, string> {
   const token = getToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
+  if (!token) return {}
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    if (payload.exp * 1000 < Date.now()) handleUnauthorized()
+  } catch { /* malformed token — backend will reject with 401 */ }
+  return { Authorization: `Bearer ${token}` }
+}
+
+export async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+  try {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('Request timed out. Please check your connection.')
+    }
+    throw new Error('Network error. Please check your connection.')
+  } finally {
+    clearTimeout(id)
+  }
 }
 
 export async function login(data: LoginRequest): Promise<void> {
@@ -25,7 +46,7 @@ export async function login(data: LoginRequest): Promise<void> {
   body.append('username', data.email)
   body.append('password', data.password)
 
-  const res = await fetch(`${BASE_URL}/auth/login`, {
+  const res = await fetchWithTimeout(`${BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
@@ -46,7 +67,7 @@ export async function logout(): Promise<void> {
 }
 
 export async function getMe(): Promise<UserResponse> {
-  const res = await fetch(`${BASE_URL}/auth/me`, {
+  const res = await fetchWithTimeout(`${BASE_URL}/auth/me`, {
     headers: authHeaders(),
   })
   if (res.status === 401) handleUnauthorized()
@@ -55,7 +76,7 @@ export async function getMe(): Promise<UserResponse> {
 }
 
 export async function register(data: RegisterRequest): Promise<void> {
-  const res = await fetch(`${BASE_URL}/users/register`, {
+  const res = await fetchWithTimeout(`${BASE_URL}/users/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),

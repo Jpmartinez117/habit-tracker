@@ -12,7 +12,7 @@ def create_habit(db: Session, habit_data: HabitCreate, user_id: int) -> Habit:
         .first()
     )
     if existing:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="An active habit with this name already exists")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="An active goal with this name already exists")
 
     new_habit = Habit(
         user_id=user_id,
@@ -49,7 +49,7 @@ def update_habit(db: Session, habit_id: int, user_id: int, habit_data: HabitUpda
     )
 
     if not habit:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Habit not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Goal not found")
 
     updates = habit_data.model_dump(exclude_unset=True)
     for field, value in updates.items():
@@ -67,7 +67,7 @@ def archive_habit(db: Session, habit_id: int, user_id: int) -> Habit:
     )
 
     if not habit:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Habit not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Goal not found")
 
     habit.is_archived = True
     db.commit()
@@ -82,7 +82,7 @@ def restore_habit(db: Session, habit_id: int, user_id: int) -> Habit:
     )
 
     if not habit:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Habit not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Goal not found")
 
     habit.is_archived = False
     db.commit()

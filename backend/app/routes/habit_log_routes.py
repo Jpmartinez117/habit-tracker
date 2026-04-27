@@ -56,5 +56,5 @@ def get_habit_summary_route(
 ):
     summary = get_habit_summary(db=db, habit_id=habit_id, user_id=current_user.id, target_month=month)
     if summary is None:
-        raise HTTPException(status_code=404, detail="Habit not found")
+        raise HTTPException(status_code=404, detail="Goal not found")
     return summary

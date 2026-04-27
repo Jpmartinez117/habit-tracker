@@ -36,7 +36,7 @@ export default function ManageHabitsPage({ navigate }: Props) {
       setActiveHabits(active)
       setArchivedHabits(archived)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load habits')
+      setError(err instanceof Error ? err.message : 'Failed to load goals')
     }
   }
 
@@ -46,7 +46,10 @@ export default function ManageHabitsPage({ navigate }: Props) {
 
   async function handleCreate() {
     const name = newHabitName.trim()
-    if (!name) return
+    if (!name) {
+      setError('Goal name cannot be empty')
+      return
+    }
     setError('')
     try {
       await createHabit({ name, frequency: 'daily', target_count: 1 })
@@ -92,6 +95,10 @@ export default function ManageHabitsPage({ navigate }: Props) {
 
   async function handleSaveEdit() {
     if (!editingHabit) return
+    if (!editName.trim()) {
+      setEditError('Goal name cannot be empty')
+      return
+    }
     setEditError('')
     try {
       await updateHabit(editingHabit.id, {
@@ -133,6 +140,7 @@ export default function ManageHabitsPage({ navigate }: Props) {
           placeholder="New goal name"
           value={newHabitName}
           onChange={e => setNewHabitName(e.target.value)}
+          maxLength={100}
           onKeyDown={e => e.key === 'Enter' && handleCreate()}
         />
         <button className="btn btn-primary" onClick={handleCreate}>
@@ -200,6 +208,7 @@ export default function ManageHabitsPage({ navigate }: Props) {
                       className="form-control"
                       value={editName}
                       onChange={e => setEditName(e.target.value)}
+                      maxLength={100}
                     />
                   </div>
                   <div className="mb-3">

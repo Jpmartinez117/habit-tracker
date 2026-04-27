@@ -1,10 +1,10 @@
 import type { Habit, CreateHabitRequest, UpdateHabitRequest } from '../types/habit'
-import { authHeaders, handleUnauthorized } from './authService'
+import { authHeaders, handleUnauthorized, fetchWithTimeout } from './authService'
 
 const BASE_URL = 'http://localhost:8000'
 
 export async function getHabits(): Promise<Habit[]> {
-  const res = await fetch(`${BASE_URL}/habits`, {
+  const res = await fetchWithTimeout(`${BASE_URL}/habits`, {
     headers: authHeaders(),
   })
   if (res.status === 401) handleUnauthorized()
@@ -13,7 +13,7 @@ export async function getHabits(): Promise<Habit[]> {
 }
 
 export async function getArchivedHabits(): Promise<Habit[]> {
-  const res = await fetch(`${BASE_URL}/habits/archived`, {
+  const res = await fetchWithTimeout(`${BASE_URL}/habits/archived`, {
     headers: authHeaders(),
   })
   if (res.status === 401) handleUnauthorized()
@@ -22,7 +22,7 @@ export async function getArchivedHabits(): Promise<Habit[]> {
 }
 
 export async function createHabit(data: CreateHabitRequest): Promise<Habit> {
-  const res = await fetch(`${BASE_URL}/habits`, {
+  const res = await fetchWithTimeout(`${BASE_URL}/habits`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(data),
@@ -36,7 +36,7 @@ export async function createHabit(data: CreateHabitRequest): Promise<Habit> {
 }
 
 export async function updateHabit(id: number, data: UpdateHabitRequest): Promise<Habit> {
-  const res = await fetch(`${BASE_URL}/habits/${id}`, {
+  const res = await fetchWithTimeout(`${BASE_URL}/habits/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(data),
@@ -50,7 +50,7 @@ export async function updateHabit(id: number, data: UpdateHabitRequest): Promise
 }
 
 export async function archiveHabit(id: number): Promise<Habit> {
-  const res = await fetch(`${BASE_URL}/habits/${id}/archive`, {
+  const res = await fetchWithTimeout(`${BASE_URL}/habits/${id}/archive`, {
     method: 'PATCH',
     headers: authHeaders(),
   })
@@ -63,7 +63,7 @@ export async function archiveHabit(id: number): Promise<Habit> {
 }
 
 export async function restoreHabit(id: number): Promise<Habit> {
-  const res = await fetch(`${BASE_URL}/habits/${id}/restore`, {
+  const res = await fetchWithTimeout(`${BASE_URL}/habits/${id}/restore`, {
     method: 'PATCH',
     headers: authHeaders(),
   })

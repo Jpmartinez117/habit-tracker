@@ -72,7 +72,7 @@ export default function DataPage({ navigate }: Props) {
     setError('')
     getHabitSummary(selectedId, selectedMonth)
       .then(setSummary)
-      .catch(() => setError('Failed to load habit summary'))
+      .catch(() => setError('Failed to load goal summary'))
       .finally(() => setSummaryLoading(false))
   }, [selectedId, selectedMonth, viewMode])
 
@@ -121,7 +121,7 @@ export default function DataPage({ navigate }: Props) {
       {/* Body */}
       {noHabits ? (
         <div className="flex-grow-1 d-flex align-items-center justify-content-center">
-          <p className="text-muted">No habits yet — go create one</p>
+          <p className="text-muted">No goals yet — go create one</p>
         </div>
       ) : (
         <div className="d-flex flex-grow-1" style={{ overflow: 'hidden' }}>

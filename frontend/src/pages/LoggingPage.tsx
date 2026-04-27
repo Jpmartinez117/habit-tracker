@@ -91,8 +91,17 @@ export default function LoggingPage({ navigate }: Props) {
         ? [logMood({ log_date: today, mood_score: moodScore, notes: note.trim() || undefined })]
         : []
 
-      await Promise.all([...habitCalls, ...moodCall])
-      setSaved(true)
+      const results = await Promise.allSettled([...habitCalls, ...moodCall])
+      const failures = results.filter(r => r.status === 'rejected')
+
+      if (failures.length === results.length) {
+        setError('Failed to save. Please check your connection and try again.')
+      } else if (failures.length > 0) {
+        setError(`Saved with ${failures.length} error(s) — some entries may not have been recorded.`)
+        setSaved(true)
+      } else {
+        setSaved(true)
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save')
     } finally {
@@ -126,7 +135,7 @@ export default function LoggingPage({ navigate }: Props) {
         </h6>
 
         {habits.length === 0 ? (
-          <p className="text-muted small mb-4">No active habits. Add some in Manage.</p>
+          <p className="text-muted small mb-4">No active goals. Add some in Manage.</p>
         ) : (
           <div className="mb-4">
             {habits.map(habit => (
@@ -149,9 +158,10 @@ export default function LoggingPage({ navigate }: Props) {
         )}
 
         {/* Mood section */}
-        <h6 className="text-uppercase text-muted mb-2" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
-          Mood
-        </h6>
+        <div className="d-flex align-items-baseline gap-2 mb-2">
+          <h6 className="text-uppercase text-muted mb-0" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>Mood</h6>
+          <span className="text-muted fst-italic" style={{ fontSize: '0.75rem' }}>(optional)</span>
+        </div>
 
         <div className="d-flex gap-2 mb-3">
           {MOOD_OPTIONS.map(({ score, emoji, label }) => (

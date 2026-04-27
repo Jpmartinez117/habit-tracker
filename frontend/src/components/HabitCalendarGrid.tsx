@@ -19,13 +19,12 @@ type Props = IndividualProps | OverallProps
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 const getHeatmapColor = (percentage: number): string => {
-  if (percentage === 0) return '#ffffff';
-  if (percentage <= 20) return '#e8f5e9';
-  if (percentage <= 40) return '#a5d6a7';
-  if (percentage <= 60) return '#66bb6a';
-  if (percentage <= 80) return '#388e3c';
-  if (percentage < 100) return '#2e7d32';
-  return '#1b5e20';
+  if (percentage === 0)  return 'rgba(108, 117, 125, 0.25)';
+  if (percentage <= 25)  return '#d1e7dd';
+  if (percentage < 50)   return '#75b798';
+  if (percentage < 75)   return '#198754';
+  if (percentage < 100)  return '#146c43';
+  return '#0a3622';
 };
 
 export default function HabitCalendarGrid(props: Props) {
@@ -59,7 +58,7 @@ export default function HabitCalendarGrid(props: Props) {
   return (
     <div>
       <h5 className="mb-3 fw-semibold">{monthHeader}</h5>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
         {/* Day-of-week labels */}
         {DAY_LABELS.map(d => (
           <div key={d} className="text-center text-muted small fw-semibold py-1">
@@ -91,20 +90,19 @@ export default function HabitCalendarGrid(props: Props) {
             }
             const pct = percentageMap.get(dateStr) ?? 0
             const bgColor = getHeatmapColor(pct)
-            const isDark = pct > 40
+            const textColor = pct === 0 ? 'rgba(33, 37, 41, 0.75)' : pct >= 50 ? '#ffffff' : '#212529'
             return (
               <div
                 key={dateStr}
-                className="rounded d-flex align-items-center justify-content-center"
+                className="rounded d-flex align-items-center justify-content-center small fw-medium"
                 style={{
                   aspectRatio: '1',
                   minHeight: '28px',
-                  fontSize: '0.65rem',
                   border: '1px solid #e9ecef',
                   backgroundColor: bgColor,
                 }}
               >
-                <span className={isDark ? '' : 'text-muted'}>{day}</span>
+                <span style={{ color: textColor }}>{day}</span>
               </div>
             )
           }
