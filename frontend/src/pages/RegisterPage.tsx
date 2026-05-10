@@ -11,32 +11,33 @@ export default function RegisterPage({ navigate }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
 
-  const usernameTooShort = username.length > 0 && username.length < 3
-  const passwordMismatch = confirmPassword.length > 0 && password !== confirmPassword
-
-  function handleChange<T>(setter: (v: T) => void) {
+  function handleChange(setter: (v: string) => void, field: string) {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
-      setter(e.target.value as T)
-      setError('')
+      setter(e.target.value)
+      setErrors(prev => ({ ...prev, [field]: '' }))
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError('')
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
+    const newErrors: Record<string, string> = {}
+    if (!username) newErrors.username = 'Username is required'
+    else if (username.length < 3) newErrors.username = 'Username must be at least 3 characters'
+    if (!email) newErrors.email = 'Email is required'
+    if (!password) newErrors.password = 'Password is required'
+    else if (password.length < 8) newErrors.password = 'Password must be at least 8 characters'
+    if (!confirmPassword) newErrors.confirmPassword = 'Please confirm your password'
+    else if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return }
     setLoading(true)
     try {
       await register({ username, email, password })
       navigate('login')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Registration failed')
+      setErrors({ server: err instanceof Error ? err.message : 'Registration failed' })
     } finally {
       setLoading(false)
     }
@@ -48,28 +49,18 @@ export default function RegisterPage({ navigate }: Props) {
         <div className="card-body p-4">
           <h1 className="h4 mb-4 text-center">Register</h1>
 
-          {error && (
-            <div className="alert alert-danger py-2" role="alert">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <div className="mb-3">
               <label htmlFor="username" className="form-label">Username</label>
               <input
                 id="username"
                 type="text"
-                className={`form-control ${usernameTooShort ? 'is-invalid' : ''}`}
+                className={`form-control ${errors.username ? 'is-invalid' : ''}`}
                 value={username}
-                onChange={handleChange(setUsername)}
-                required
-                minLength={3}
+                onChange={handleChange(setUsername, 'username')}
                 autoFocus
               />
-              {usernameTooShort && (
-                <div className="invalid-feedback">Username must be at least 3 characters</div>
-              )}
+              {errors.username && <div className="invalid-feedback">{errors.username}</div>}
             </div>
 
             <div className="mb-3">
@@ -77,11 +68,11 @@ export default function RegisterPage({ navigate }: Props) {
               <input
                 id="email"
                 type="email"
-                className="form-control"
+                className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                 value={email}
-                onChange={handleChange(setEmail)}
-                required
+                onChange={handleChange(setEmail, 'email')}
               />
+              {errors.email && <div className="invalid-feedback">{errors.email}</div>}
             </div>
 
             <div className="mb-3">
@@ -89,12 +80,11 @@ export default function RegisterPage({ navigate }: Props) {
               <input
                 id="password"
                 type="password"
-                className="form-control"
+                className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                 value={password}
-                onChange={handleChange(setPassword)}
-                required
-                minLength={8}
+                onChange={handleChange(setPassword, 'password')}
               />
+              {errors.password && <div className="invalid-feedback">{errors.password}</div>}
             </div>
 
             <div className="mb-3">
@@ -102,14 +92,11 @@ export default function RegisterPage({ navigate }: Props) {
               <input
                 id="confirmPassword"
                 type="password"
-                className={`form-control ${passwordMismatch ? 'is-invalid' : ''}`}
+                className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
                 value={confirmPassword}
-                onChange={handleChange(setConfirmPassword)}
-                required
+                onChange={handleChange(setConfirmPassword, 'confirmPassword')}
               />
-              {passwordMismatch && (
-                <div className="invalid-feedback">Passwords do not match</div>
-              )}
+              {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
             </div>
 
             <button
@@ -119,6 +106,12 @@ export default function RegisterPage({ navigate }: Props) {
             >
               {loading ? 'Registering...' : 'Register'}
             </button>
+
+            {errors.server && (
+              <div className="alert alert-danger py-2 mt-3 mb-0" role="alert">
+                {errors.server}
+              </div>
+            )}
           </form>
 
           <p className="text-center mt-3 mb-0 small">
