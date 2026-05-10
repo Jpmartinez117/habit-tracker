@@ -9,7 +9,7 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.users import User
 from app.schemas.habit_log import HabitLogCreate, HabitLogResponse, HabitSummaryResponse, OverallSummaryResponse
-from app.services.habit_log_service import log_habit, get_today_habit_logs
+from app.services.habit_log_service import log_habit, get_today_habit_logs, delete_habit_log
 from app.services.habit_log_summary_service import get_habit_summary, get_overall_summary
 
 router = APIRouter(prefix="/habit-logs", tags=["Habit Logs"])
@@ -30,6 +30,16 @@ def create_habit_log(
     current_user: User = Depends(get_current_user),
 ):
     return log_habit(db=db, log_data=log_data, user_id=current_user.id)
+
+@router.delete("/{habit_id}/{log_date}", status_code=204)
+def delete_habit_log_route(
+    habit_id: int,
+    log_date: date,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    delete_habit_log(db=db, habit_id=habit_id, log_date=log_date, user_id=current_user.id)
+
 
 @router.get("/overall/summary", response_model=OverallSummaryResponse)
 def get_overall_summary_route(

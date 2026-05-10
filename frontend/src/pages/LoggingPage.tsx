@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Habit } from '../types/habit'
 import { getHabits } from '../services/habitService'
-import { getTodayHabitLogs, getTodayMoodLog, logHabit, logMood } from '../services/logService'
+import { getTodayHabitLogs, getTodayMoodLog, logHabit, deleteHabitLog, logMood } from '../services/logService'
 import type { Page } from '../App'
 
 interface Props {
@@ -39,6 +39,7 @@ function getTodayDisplay(): string {
 export default function LoggingPage({ navigate }: Props) {
   const [habits, setHabits] = useState<Habit[]>([])
   const [toggles, setToggles] = useState<Record<number, boolean>>({})
+  const [todayLogs, setTodayLogs] = useState<import('../types/log').HabitLogResponse[]>([])
   const [moodScore, setMoodScore] = useState<number | null>(null)
   const [note, setNote] = useState('')
   const [saved, setSaved] = useState(false)
@@ -55,6 +56,7 @@ export default function LoggingPage({ navigate }: Props) {
 
         // Pre-populate toggles from today's existing logs so re-opening the page
         // shows the user's previous selections rather than resetting everything to off (missed).
+        setTodayLogs(todayLogs)
         const initial: Record<number, boolean> = {}
         fetched.forEach(h => {
           const existing = todayLogs.find(l => l.habit_id === h.id)
@@ -79,13 +81,13 @@ export default function LoggingPage({ navigate }: Props) {
     setError('')
     setSaved(false)
     try {
-      const habitCalls = habits.map(habit =>
-        logHabit({
-          habit_id: habit.id,
-          log_date: today,
-          status: toggles[habit.id] ? 'completed' : 'missed',
-        })
-      )
+      const habitCalls = habits.map(habit => {
+        const wasLogged = todayLogs.find(l => l.habit_id === habit.id)
+        const isChecked = toggles[habit.id]
+        if (isChecked) return logHabit({ habit_id: habit.id, log_date: today, status: 'completed' })
+        if (wasLogged) return deleteHabitLog(habit.id, today)
+        return Promise.resolve()
+      })
 
       const moodCall = moodScore !== null
         ? [logMood({ log_date: today, mood_score: moodScore, notes: note.trim() || undefined })]
@@ -102,6 +104,8 @@ export default function LoggingPage({ navigate }: Props) {
       } else {
         setSaved(true)
       }
+      const refreshed = await getTodayHabitLogs()
+      setTodayLogs(refreshed)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save')
     } finally {

@@ -9,6 +9,16 @@ from app.models.habit_model import Habit
 from app.schemas.habit_log import HabitLogCreate
 
 
+def delete_habit_log(db: Session, habit_id: int, log_date: date, user_id: int) -> None:
+    habit = db.query(Habit).filter(Habit.id == habit_id, Habit.user_id == user_id).first()
+    if not habit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Goal not found")
+    log = db.query(HabitLog).filter(HabitLog.habit_id == habit_id, HabitLog.log_date == log_date).first()
+    if log:
+        db.delete(log)
+        db.commit()
+
+
 def get_today_habit_logs(db: Session, user_id: int) -> List[HabitLog]:
     today = date.today()
     return (

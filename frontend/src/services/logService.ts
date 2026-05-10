@@ -35,6 +35,15 @@ export async function logHabit(data: HabitLogRequest): Promise<HabitLogResponse>
   return res.json()
 }
 
+export async function deleteHabitLog(habitId: number, logDate: string): Promise<void> {
+  const res = await fetchWithTimeout(`${BASE_URL}/habit-logs/${habitId}/${logDate}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  })
+  if (res.status === 401) handleUnauthorized()
+  if (!res.ok) throw new Error('Failed to delete habit log')
+}
+
 export async function getHabitSummary(habitId: number, month?: string): Promise<HabitSummaryResponse> {
   const url = month
     ? `${BASE_URL}/habit-logs/${habitId}/summary?month=${month}`
