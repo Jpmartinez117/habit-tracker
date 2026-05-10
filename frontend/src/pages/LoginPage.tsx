@@ -30,7 +30,7 @@ export default function LoginPage({ navigate }: Props) {
     <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
       <div className="card shadow-sm" style={{ width: '100%', maxWidth: '400px' }}>
         <div className="card-body p-4">
-          <h1 className="h4 mb-4 text-center">Goal Tracker</h1>
+          <h1 className="h4 mb-4 text-center">uGoal</h1>
 
           {error && (
             <div className="alert alert-danger py-2" role="alert">
