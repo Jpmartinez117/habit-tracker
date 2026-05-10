@@ -59,13 +59,13 @@ def calc_current_streak(logs_by_date: dict, today: date) -> int:
         cursor -= timedelta(days=1)
     return streak
 
-def build_daily_breakdown(logs_by_date: dict, start: date, end: date, active_dates: set) -> list:
+def build_daily_breakdown(logs_by_date: dict, start: date, end: date, active_dates: set, today: date) -> list:
     breakdown = []
     cursor = start
     while cursor <= end:
         if cursor in logs_by_date:
             breakdown.append({"date": cursor.isoformat(), "status": logs_by_date[cursor]})
-        elif cursor in active_dates:
+        elif cursor in active_dates and cursor < today:
             breakdown.append({"date": cursor.isoformat(), "status": "missed"})
         else:
             breakdown.append({"date": cursor.isoformat(), "status": "not_logged"})
@@ -122,7 +122,7 @@ def get_habit_summary(db: Session, habit_id: int, user_id: int, target_month: Op
     completion_pct = calc_completion_percentage(total_completed, days_since_created)
     this_week_pct, last_week_pct, week_change = calc_week_percentages(stats_logs_by_date, today)
     current_streak = calc_current_streak(all_logs_by_date, today)
-    daily_breakdown = build_daily_breakdown(breakdown_by_date, window_start, window_end, active_dates)
+    daily_breakdown = build_daily_breakdown(breakdown_by_date, window_start, window_end, active_dates, today)
 
     return {
         "habit_id": habit.id,
@@ -155,52 +155,57 @@ def get_overall_summary(db: Session, user_id: int, target_month: Optional[str] =
     window_end = min(month_end, today)
     is_current_month = month_start == today.replace(day=1)
 
-    # Daily non-archived habits for this user
-    daily_habits = (
+    # All habits ever created for this user (including archived, all frequencies).
+    # The Logging page lets the user toggle any active habit, so the overall heatmap
+    # mirrors every habit they can save. Archived habits still count for days they
+    # were active in the past — those logs are real history. The top-level "Active
+    # Goals" metric uses only currently non-archived habits.
+    all_habits = (
         db.query(Habit)
-        .filter(
-            Habit.user_id == user_id,
-            Habit.is_archived == False,
-            Habit.frequency == "daily",
-        )
+        .filter(Habit.user_id == user_id)
         .all()
     )
-    daily_habit_count = len(daily_habits)
-    daily_habit_ids = [h.id for h in daily_habits]
+    all_habit_ids = [h.id for h in all_habits]
+    habit_created_dates = [h.created_at.date() for h in all_habits]
+    current_habit_count = sum(1 for h in all_habits if not h.is_archived)
 
-    # Month logs for all daily habits
+    def active_count_on(d: date) -> int:
+        return sum(1 for cd in habit_created_dates if cd <= d)
+
+    # Month logs across all habits (including ones now archived)
     month_logs = (
         db.query(HabitLog)
         .filter(
-            HabitLog.habit_id.in_(daily_habit_ids),
+            HabitLog.habit_id.in_(all_habit_ids),
             HabitLog.log_date >= month_start,
             HabitLog.log_date <= window_end,
         )
         .all()
-    ) if daily_habit_ids else []
+    ) if all_habit_ids else []
 
-    # Aggregate completed count per day
     completed_by_date: dict = {}
     for log in month_logs:
         if log.status == "completed":
             completed_by_date[log.log_date] = completed_by_date.get(log.log_date, 0) + 1
 
-    # Build daily_breakdown: one entry per day from month_start to window_end
+    # Build daily_breakdown — denominator per day reflects how many daily habits
+    # were already created by that date.
     daily_breakdown = []
     cursor = month_start
     while cursor <= window_end:
+        active_count = active_count_on(cursor)
         completed = completed_by_date.get(cursor, 0)
-        pct = round(completed / daily_habit_count * 100, 1) if daily_habit_count > 0 else 0.0
+        pct = round(completed / active_count * 100, 1) if active_count > 0 else 0.0
         daily_breakdown.append({
             "date": cursor.isoformat(),
             "completed": completed,
-            "total_daily_habits": daily_habit_count,
+            "total_daily_habits": active_count,
             "percentage": pct,
         })
         cursor += timedelta(days=1)
 
     total_completed = sum(d["completed"] for d in daily_breakdown)
-    total_possible = window_end.day * daily_habit_count
+    total_possible = sum(d["total_daily_habits"] for d in daily_breakdown)
     total_missed = total_possible - total_completed
     completion_pct = calc_completion_percentage(total_completed, total_possible)
 
@@ -214,26 +219,27 @@ def get_overall_summary(db: Session, user_id: int, target_month: Optional[str] =
         week_logs = (
             db.query(HabitLog)
             .filter(
-                HabitLog.habit_id.in_(daily_habit_ids),
+                HabitLog.habit_id.in_(all_habit_ids),
                 HabitLog.log_date >= stats_start,
                 HabitLog.log_date <= today,
             )
             .all()
-        ) if daily_habit_ids else []
+        ) if all_habit_ids else []
 
         week_completed_by_date: dict = {}
         for log in week_logs:
             if log.status == "completed":
                 week_completed_by_date[log.log_date] = week_completed_by_date.get(log.log_date, 0) + 1
 
-        week_denominator = 7 * daily_habit_count if daily_habit_count > 0 else 1
-
         this_week_start = today - timedelta(days=6)
         this_week_completed = sum(
             count for d, count in week_completed_by_date.items()
             if this_week_start <= d <= today
         )
-        this_week_pct = round(this_week_completed / week_denominator * 100, 1)
+        this_week_denominator = sum(
+            active_count_on(this_week_start + timedelta(days=i)) for i in range(7)
+        )
+        this_week_pct = round(this_week_completed / this_week_denominator * 100, 1) if this_week_denominator > 0 else 0.0
 
         last_week_end = today - timedelta(days=7)
         last_week_start = today - timedelta(days=13)
@@ -241,7 +247,10 @@ def get_overall_summary(db: Session, user_id: int, target_month: Optional[str] =
             count for d, count in week_completed_by_date.items()
             if last_week_start <= d <= last_week_end
         )
-        last_week_pct = round(last_week_completed / week_denominator * 100, 1)
+        last_week_denominator = sum(
+            active_count_on(last_week_start + timedelta(days=i)) for i in range(7)
+        )
+        last_week_pct = round(last_week_completed / last_week_denominator * 100, 1) if last_week_denominator > 0 else 0.0
 
         week_change = round(this_week_pct - last_week_pct, 1)
 
@@ -262,7 +271,7 @@ def get_overall_summary(db: Session, user_id: int, target_month: Optional[str] =
 
     return {
         "month": month_start.strftime("%Y-%m"),
-        "daily_habit_count": daily_habit_count,
+        "daily_habit_count": current_habit_count,
         "total_completed": total_completed,
         "total_missed": total_missed,
         "completion_percentage": completion_pct,

@@ -19,11 +19,11 @@ type Props = IndividualProps | OverallProps
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 const getHeatmapColor = (percentage: number): string => {
-  if (percentage === 0)  return 'rgba(108, 117, 125, 0.25)';
-  if (percentage <= 25)  return '#d1e7dd';
-  if (percentage < 50)   return '#75b798';
-  if (percentage < 75)   return '#198754';
-  if (percentage < 100)  return '#146c43';
+  if (percentage === 0)    return '#e9ecef';
+  if (percentage <= 25)    return '#a3cfbb';
+  if (percentage <= 50)    return '#479f76';
+  if (percentage <= 75)    return '#198754';
+  if (percentage < 100)    return '#146c43';
   return '#0a3622';
 };
 
@@ -79,13 +79,14 @@ export default function HabitCalendarGrid(props: Props) {
           if (props.mode === 'overall') {
             const isFuture = dateStr > todayStr
             if (isFuture) {
-              // Future days — empty placeholder to preserve grid shape
               return (
                 <div
                   key={dateStr}
-                  className="rounded"
+                  className="rounded d-flex align-items-center justify-content-center small fw-medium"
                   style={{ aspectRatio: '1', minHeight: '28px' }}
-                />
+                >
+                  {day}
+                </div>
               )
             }
             const pct = percentageMap.get(dateStr) ?? 0
@@ -117,16 +118,15 @@ export default function HabitCalendarGrid(props: Props) {
             const isBeforeCreation = !isFuture && status === undefined
 
             if (isBeforeCreation) {
-              cls = 'rounded'
-              showDay = false
+              // empty cell — black day number, no fill
             } else if (isFuture) {
-              cls += ' text-muted'
+              // empty cell — black day number, no fill
             } else if (status === 'completed') {
               cls += ' bg-success text-white'
             } else if (status === 'missed') {
               cls += ' bg-danger text-white'
             } else {
-              cls += ' bg-secondary bg-opacity-25 text-muted'
+              cls += ' bg-secondary bg-opacity-25'
             }
           } else {
             if (status === 'completed') {
@@ -134,11 +134,11 @@ export default function HabitCalendarGrid(props: Props) {
             } else if (status === 'missed') {
               cls += ' bg-danger text-white'
             } else if (status === 'not_logged') {
-              cls += ' bg-secondary bg-opacity-25 text-muted'
+              cls += ' bg-secondary bg-opacity-25'
             } else if (dateStr < props.habitCreatedAt) {
-              cls += ' text-muted'
+              // empty cell — black day number, no fill
             } else {
-              cls += ' bg-secondary bg-opacity-25 text-muted'
+              cls += ' bg-secondary bg-opacity-25'
             }
           }
 
