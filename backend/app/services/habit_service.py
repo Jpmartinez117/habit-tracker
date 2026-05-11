@@ -52,6 +52,27 @@ def update_habit(db: Session, habit_id: int, user_id: int, habit_data: HabitUpda
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Goal not found")
 
     updates = habit_data.model_dump(exclude_unset=True)
+
+    # If the name is being changed, enforce the same uniqueness rule as create.
+    if "name" in updates:
+        new_name = updates["name"].strip()
+        updates["name"] = new_name
+        conflict = (
+            db.query(Habit)
+            .filter(
+                Habit.user_id == user_id,
+                Habit.name == new_name,
+                Habit.is_archived == False,
+                Habit.id != habit_id,
+            )
+            .first()
+        )
+        if conflict:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An active goal with this name already exists",
+            )
+
     for field, value in updates.items():
         setattr(habit, field, value)
 
