@@ -11,6 +11,6 @@ class MoodLog(Base):
     log_date = Column(Date, nullable=False)
     mood_score = Column(Integer, nullable=False)
     mood_label = Column(String(20))
-    notes = Column(String(225))
+    notes = Column(String(255))
 
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

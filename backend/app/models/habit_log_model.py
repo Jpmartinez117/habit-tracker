@@ -10,6 +10,6 @@ class HabitLog(Base):
 
     log_date = Column(Date, nullable=False)
     status = Column(Enum("completed", "missed", "skipped"), nullable=False, default="completed")
-    notes = Column(String(225))
+    notes = Column(String(255))
 
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

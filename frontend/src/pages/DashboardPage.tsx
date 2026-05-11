@@ -5,7 +5,6 @@ import { getMe, logout } from '../services/authService'
 import { getTodayHabitLogs , getTodayMoodLog} from '../services/logService'
 import HabitListItem from '../components/HabitListItem'
 import type { Page } from '../App'
-// Havebt finished mapping mood lables to dashboard
 
 interface Props {
   navigate: (page: Page) => void
@@ -133,7 +132,6 @@ export default function DashboardPage({ navigate }: Props) {
                 <span className="fw-semibold">{total}</span>
               </div>
 
-              {/* TODO: fetch today's mood from the API instead of hardcoding "Not logged" */}
               <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
                 <span className="text-muted small">Mood</span>
                 <span className={moodLabel ? 'fw-medium' : 'text-muted small fst-italic'}>
@@ -160,7 +158,6 @@ export default function DashboardPage({ navigate }: Props) {
                 </span>
               </div>
 
-              {/* TODO: calculate streak from habit log history instead of hardcoding 0 */}
               <div className="d-flex justify-content-between align-items-center">
                 <span className="text-muted small">Consecutive days</span>
                 <span className="fw-semibold">{loginStreak}</span>
