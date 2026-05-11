@@ -14,10 +14,40 @@ export default function RegisterPage({ navigate }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
 
+  function validateField(field: string, value: string, pwd: string): string {
+    switch (field) {
+      case 'username':
+        if (value.length > 0 && value.length < 3) return 'Username must be at least 3 characters'
+        return ''
+      case 'email':
+        // Light shape check — server's Pydantic EmailStr does the authoritative validation.
+        if (value.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          return 'Enter a valid email address'
+        }
+        return ''
+      case 'password':
+        if (value.length > 0 && value.length < 8) return 'Password must be at least 8 characters'
+        return ''
+      case 'confirmPassword':
+        if (value.length > 0 && value !== pwd) return 'Passwords do not match'
+        return ''
+      default:
+        return ''
+    }
+  }
+
   function handleChange(setter: (v: string) => void, field: string) {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
-      setter(e.target.value)
-      setErrors(prev => ({ ...prev, [field]: '' }))
+      const value = e.target.value
+      setter(value)
+      setErrors(prev => {
+        const next = { ...prev, [field]: validateField(field, value, password) }
+        // Editing password re-checks confirmPassword against the new password.
+        if (field === 'password') {
+          next.confirmPassword = validateField('confirmPassword', confirmPassword, value)
+        }
+        return next
+      })
     }
   }
 
