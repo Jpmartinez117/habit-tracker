@@ -155,18 +155,18 @@ def get_overall_summary(db: Session, user_id: int, target_month: Optional[str] =
     window_end = min(month_end, today)
     is_current_month = month_start == today.replace(day=1)
 
-    # All habits ever created for this user (including archived, all frequencies).
-    # The Logging page lets the user toggle any active habit, so the overall heatmap
-    # mirrors every habit they can save. Archived habits still count for days they
-    # were active in the past — those logs are real history. The top-level "Active
-    # Goals" metric uses only currently non-archived habits.
+    # Overall summary considers only currently non-archived habits. Archived
+    # habits and their historical logs are excluded entirely from the heatmap
+    # and totals — they remain visible per-habit in the Individual view, but
+    # do not drag the overall completion percentage down or up.
     all_habits = (
         db.query(Habit)
-        .filter(Habit.user_id == user_id)
+        .filter(Habit.user_id == user_id, Habit.is_archived == False)
         .all()
     )
     all_habit_ids = [h.id for h in all_habits]
     habit_created_dates = [h.created_at.date() for h in all_habits]
+    habit_created_map = {h.id: h.created_at.date() for h in all_habits}
     current_habit_count = sum(1 for h in all_habits if not h.is_archived)
 
     def active_count_on(d: date) -> int:
@@ -183,9 +183,12 @@ def get_overall_summary(db: Session, user_id: int, target_month: Optional[str] =
         .all()
     ) if all_habit_ids else []
 
+    # Only count a log if the habit existed on that date — guards against
+    # backfilled logs (and seeded historical data) inflating the numerator
+    # on days where the denominator is zero.
     completed_by_date: dict = {}
     for log in month_logs:
-        if log.status == "completed":
+        if log.status == "completed" and log.log_date >= habit_created_map[log.habit_id]:
             completed_by_date[log.log_date] = completed_by_date.get(log.log_date, 0) + 1
 
     # Build daily_breakdown — denominator per day reflects how many daily habits
@@ -228,7 +231,7 @@ def get_overall_summary(db: Session, user_id: int, target_month: Optional[str] =
 
         week_completed_by_date: dict = {}
         for log in week_logs:
-            if log.status == "completed":
+            if log.status == "completed" and log.log_date >= habit_created_map[log.habit_id]:
                 week_completed_by_date[log.log_date] = week_completed_by_date.get(log.log_date, 0) + 1
 
         this_week_start = today - timedelta(days=6)

@@ -31,11 +31,6 @@ function calcCurrentMonthMetrics(breakdown: DailyHabitBreakdown[]) {
   const today = new Date()
   const todayStr = toDateStr(today)
 
-  const daysElapsed = today.getDate()
-  const completedCount = breakdown.filter(d => d.date <= todayStr && d.status === 'completed').length
-  const missedThisMonth = daysElapsed - completedCount
-  const completionPct = +(completedCount / daysElapsed * 100).toFixed(1)
-
   const dayOfWeek = today.getDay()
   const daysFromMonday = (dayOfWeek + 6) % 7
 
@@ -65,7 +60,7 @@ function calcCurrentMonthMetrics(breakdown: DailyHabitBreakdown[]) {
 
   const weekChange = +(thisWeekPct - lastWeekPct).toFixed(1)
 
-  return { completedCount, missedThisMonth, completionPct, thisWeekPct, lastWeekPct, weekChange }
+  return { thisWeekPct, lastWeekPct, weekChange }
 }
 
 function calcOverallWeekMetrics(breakdown: DailyOverallBreakdown[]) {
@@ -170,7 +165,7 @@ export default function HabitMetricsPanel(props: Props) {
   const { summary, isCurrentMonth } = props
 
   if (isCurrentMonth) {
-    const { completionPct, thisWeekPct, lastWeekPct, weekChange } =
+    const { thisWeekPct, lastWeekPct, weekChange } =
       calcCurrentMonthMetrics(summary.daily_breakdown)
 
     const sign = weekChange >= 0 ? '+' : ''
@@ -181,7 +176,7 @@ export default function HabitMetricsPanel(props: Props) {
         <h6 className="fw-semibold mb-3">{summary.habit_name}</h6>
         <MetricRow label="Total Completed" value={summary.total_completed} />
         <MetricRow label="Total Missed" value={summary.total_missed} />
-        <MetricRow label="Completion %" value={`${completionPct}%`} />
+        <MetricRow label="Completion %" value={`${summary.completion_percentage}%`} />
         <MetricRow label="This Week" value={`${thisWeekPct}%`} />
         <MetricRow label="Last Week" value={`${lastWeekPct}%`} />
         <MetricRow
