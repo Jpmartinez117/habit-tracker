@@ -42,6 +42,12 @@ def log_habit(db: Session, log_data: HabitLogCreate, user_id: int) -> HabitLog:
     if not habit:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Goal not found")
 
+    if log_data.log_date < habit.created_at.date():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot log for a date before the goal was created",
+        )
+
     # Upsert: if a log already exists for this habit + date, update it in place.
     # This lets users re-open the logging page and re-submit without creating duplicate entries.
     existing = (
