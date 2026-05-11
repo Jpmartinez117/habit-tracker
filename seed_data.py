@@ -18,7 +18,7 @@ and re-seeded. Other users are left untouched.
 """
 import os
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 
 # Make backend/ importable so we can reuse the app's models and security helpers.
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -84,6 +84,11 @@ def seed() -> None:
 
         today = date.today()
 
+        # Backdate habit creation so the 14 days of seeded logs all fall within
+        # the habit's lifetime. Otherwise the summary service correctly filters
+        # them out as pre-creation and the demo user's heatmap looks empty.
+        seed_created_at = datetime.combine(today - timedelta(days=13), time(0, 0))
+
         # Create habits
         created_habits: dict[str, Habit] = {}
         for spec in HABITS:
@@ -94,6 +99,7 @@ def seed() -> None:
                 frequency="daily",
                 target_count=1,
                 is_archived=False,
+                created_at=seed_created_at,
             )
             db.add(habit)
             created_habits[spec["name"]] = habit
